@@ -5,8 +5,11 @@ if(localStorage.getItem("logado") !== "sim"){
 }
 
 let reconhecimento;
+
 let aulaAtiva = false;
+
 let aulaPausada = false;
+
 let textoCompleto = "";
 
 const SpeechRecognition =
@@ -49,15 +52,29 @@ function iniciarAula(){
 
 reconhecimento.onresult = function(event){
 
-    let textoParcial = "";
+    let textoFinal = "";
 
     for(let i = event.resultIndex; i < event.results.length; i++){
 
-        textoParcial += event.results[i][0].transcript + " ";
+        const transcript =
+        event.results[i][0].transcript.trim();
+
+        const isFinal =
+        event.results[i].isFinal;
+
+        if(isFinal){
+
+            textoFinal += transcript + " ";
+
+        }
 
     }
 
-    processarTexto(textoParcial);
+    if(textoFinal !== ""){
+
+        processarTexto(textoFinal);
+
+    }
 
 };
 
@@ -79,7 +96,15 @@ reconhecimento.onend = function(){
 
 function processarTexto(texto){
 
-    const textoLower = texto.toLowerCase();
+    const textoLower = texto.toLowerCase().trim();
+
+    console.log("Reconhecido:", textoLower);
+
+    /*
+    ========================
+    COMANDOS DE VOZ
+    ========================
+    */
 
     if(textoLower.includes("libravox pausar")){
 
@@ -101,15 +126,8 @@ function processarTexto(texto){
 
     }
 
-    if(textoLower.includes("libravox fim")){
-
-        finalizarAula();
-
-        return;
-
-    }
-
-    if(textoLower.includes("libravox camera")){
+    if(textoLower.includes("libravox câmera") ||
+       textoLower.includes("libravox camera")){
 
         aulaPausada = true;
 
@@ -121,9 +139,40 @@ function processarTexto(texto){
 
     }
 
+    if(textoLower.includes("libravox fim")){
+
+        finalizarAula();
+
+        return;
+
+    }
+
+    /*
+    ========================
+    SE ESTIVER PAUSADO
+    NÃO SALVA TEXTO
+    ========================
+    */
+
     if(aulaPausada) return;
 
-    textoCompleto += texto + " ";
+    /*
+    ========================
+    LIMPEZA DE TEXTO
+    ========================
+    */
+
+    texto = limparTexto(texto);
+
+    if(texto === "") return;
+
+    /*
+    ========================
+    SALVA TEXTO
+    ========================
+    */
+
+    textoCompleto += texto + "\n";
 
     atualizarTexto();
 
@@ -131,11 +180,33 @@ function processarTexto(texto){
 
 }
 
+function limparTexto(texto){
+
+    texto = texto.replace(/libravox pausar/gi, "");
+    texto = texto.replace(/libravox continuar/gi, "");
+    texto = texto.replace(/libravox câmera/gi, "");
+    texto = texto.replace(/libravox camera/gi, "");
+    texto = texto.replace(/libravox fim/gi, "");
+
+    texto = texto.trim();
+
+    return texto;
+
+}
+
 function atualizarTexto(){
 
-    document.getElementById("textoReconhecido").innerHTML = textoCompleto;
+    document.getElementById("textoReconhecido").innerText =
+    textoCompleto;
 
-    document.getElementById("textoVlibras").innerHTML = textoCompleto;
+    /*
+    ========================
+    TEXTO PARA O VLIBRAS
+    ========================
+    */
+
+    document.getElementById("textoVlibras").innerText =
+    textoCompleto;
 
 }
 
@@ -157,19 +228,36 @@ function finalizarAula(){
 
     salvarAula();
 
-    alert("Aula salva com sucesso.");
+    alert("Aula finalizada.");
 
 }
 
 function salvarAula(){
 
-    localStorage.setItem("aulaTexto", textoCompleto);
+    localStorage.setItem(
+        "aulaTexto",
+        textoCompleto
+    );
+
+}
+
+function limparAula(){
+
+    textoCompleto = "";
+
+    localStorage.removeItem("aulaTexto");
+
+    atualizarTexto();
+
+    atualizarStatus("🧹 Aula limpa");
 
 }
 
 function abrirCamera(){
 
-    document.getElementById("cameraInput").click();
+    document
+    .getElementById("cameraInput")
+    .click();
 
 }
 
@@ -179,7 +267,13 @@ document
 
     const arquivo = event.target.files[0];
 
-    if(!arquivo) return;
+    if(!arquivo){
+
+        aulaPausada = false;
+
+        return;
+
+    }
 
     const reader = new FileReader();
 
@@ -203,7 +297,13 @@ document
 
         atualizarStatus("📸 Imagem anexada");
 
+        /*
+        CONTINUA AUTOMATICAMENTE
+        */
+
         aulaPausada = false;
+
+        atualizarStatus("▶ Aula continuada");
 
     };
 
@@ -213,7 +313,8 @@ document
 
 window.onload = function(){
 
-    const aulaSalva = localStorage.getItem("aulaTexto");
+    const aulaSalva =
+    localStorage.getItem("aulaTexto");
 
     if(aulaSalva){
 
