@@ -53,9 +53,9 @@ async function iniciarAula(){
         );
 
         /*
-        ==========================
+        ===================================
         PERMISSÃO MICROFONE/CÂMERA
-        ==========================
+        ===================================
         */
 
         streamCamera =
@@ -107,9 +107,11 @@ reconhecimento.onresult = function(event){
 
     let textoFinal = "";
 
-    for(let i = event.resultIndex;
+    for(
+        let i = event.resultIndex;
         i < event.results.length;
-        i++){
+        i++
+    ){
 
         const transcript =
         event.results[i][0]
@@ -166,20 +168,30 @@ function processarTexto(texto){
     );
 
     /*
-    ==========================
+    =================================
+    DETECÇÃO FLEXÍVEL
+    =================================
+    */
+
+    const comandoLibra =
+    textoLower.includes("libra");
+
+    const comandoVox =
+    textoLower.includes("vox") ||
+    textoLower.includes("box") ||
+    textoLower.includes("voz");
+
+    /*
+    =================================
     PAUSAR
-    ==========================
+    =================================
     */
 
     if(
 
-        textoLower.includes(
-        "libravox pausar"
-        ) ||
-
-        textoLower.includes(
-        "libra vox pausar"
-        )
+        comandoLibra &&
+        comandoVox &&
+        textoLower.includes("pausar")
 
     ){
 
@@ -194,20 +206,16 @@ function processarTexto(texto){
     }
 
     /*
-    ==========================
+    =================================
     CONTINUAR
-    ==========================
+    =================================
     */
 
     if(
 
-        textoLower.includes(
-        "libravox continuar"
-        ) ||
-
-        textoLower.includes(
-        "libra vox continuar"
-        )
+        comandoLibra &&
+        comandoVox &&
+        textoLower.includes("continuar")
 
     ){
 
@@ -222,30 +230,27 @@ function processarTexto(texto){
     }
 
     /*
-    ==========================
-    CÂMERA
-    ==========================
+    =================================
+    CAMERA
+    =================================
     */
 
     if(
 
-        textoLower.includes(
-        "libravox câmera"
-        ) ||
+        comandoLibra &&
+        comandoVox &&
+        (
 
-        textoLower.includes(
-        "libravox camera"
-        ) ||
+            textoLower.includes("camera") ||
+            textoLower.includes("câmera")
 
-        textoLower.includes(
-        "libra vox câmera"
-        ) ||
-
-        textoLower.includes(
-        "libra vox camera"
         )
 
     ){
+
+        atualizarStatus(
+            "📷 Abrindo câmera"
+        );
 
         aulaPausada = true;
 
@@ -256,20 +261,16 @@ function processarTexto(texto){
     }
 
     /*
-    ==========================
+    =================================
     FINALIZAR
-    ==========================
+    =================================
     */
 
     if(
 
-        textoLower.includes(
-        "libravox fim"
-        ) ||
-
-        textoLower.includes(
-        "libra vox fim"
-        )
+        comandoLibra &&
+        comandoVox &&
+        textoLower.includes("fim")
 
     ){
 
@@ -280,17 +281,17 @@ function processarTexto(texto){
     }
 
     /*
-    ==========================
+    =================================
     NÃO SALVA SE PAUSADO
-    ==========================
+    =================================
     */
 
     if(aulaPausada) return;
 
     /*
-    ==========================
-    LIMPEZA TEXTO
-    ==========================
+    =================================
+    REMOVE COMANDOS
+    =================================
     */
 
     texto = limparTexto(texto);
@@ -308,52 +309,47 @@ function processarTexto(texto){
 function limparTexto(texto){
 
     texto = texto.replace(
-        /libravox pausar/gi,
+        /libra/gi,
         ""
     );
 
     texto = texto.replace(
-        /libra vox pausar/gi,
+        /vox/gi,
         ""
     );
 
     texto = texto.replace(
-        /libravox continuar/gi,
+        /box/gi,
         ""
     );
 
     texto = texto.replace(
-        /libra vox continuar/gi,
+        /voz/gi,
         ""
     );
 
     texto = texto.replace(
-        /libravox câmera/gi,
+        /pausar/gi,
         ""
     );
 
     texto = texto.replace(
-        /libravox camera/gi,
+        /continuar/gi,
         ""
     );
 
     texto = texto.replace(
-        /libra vox câmera/gi,
+        /camera/gi,
         ""
     );
 
     texto = texto.replace(
-        /libra vox camera/gi,
+        /câmera/gi,
         ""
     );
 
     texto = texto.replace(
-        /libravox fim/gi,
-        ""
-    );
-
-    texto = texto.replace(
-        /libra vox fim/gi,
+        /fim/gi,
         ""
     );
 
@@ -371,9 +367,9 @@ function atualizarTexto(){
     textoCompleto;
 
     /*
-    ==========================
+    =================================
     TEXTO DO VLIBRAS
-    ==========================
+    =================================
     */
 
     document
