@@ -48,15 +48,15 @@ async function iniciarAula(){
 
     try{
 
-        /*
-        ========================
-        SOLICITA PERMISSÕES
-        ========================
-        */
-
         atualizarStatus(
             "Solicitando permissões..."
         );
+
+        /*
+        ==========================
+        PERMISSÃO MICROFONE/CÂMERA
+        ==========================
+        */
 
         streamCamera =
         await navigator
@@ -69,7 +69,7 @@ async function iniciarAula(){
         });
 
         /*
-        FECHA STREAM INICIAL
+        FECHA O STREAM
         MAS MANTÉM PERMISSÃO
         */
 
@@ -160,17 +160,28 @@ function processarTexto(texto){
     const textoLower =
     texto.toLowerCase().trim();
 
-    console.log(textoLower);
+    console.log(
+        "Reconhecido:",
+        textoLower
+    );
 
     /*
-    ========================
-    COMANDOS DE VOZ
-    ========================
+    ==========================
+    PAUSAR
+    ==========================
     */
 
-    if(textoLower.includes(
+    if(
+
+        textoLower.includes(
         "libravox pausar"
-    )){
+        ) ||
+
+        textoLower.includes(
+        "libra vox pausar"
+        )
+
+    ){
 
         aulaPausada = true;
 
@@ -182,9 +193,23 @@ function processarTexto(texto){
 
     }
 
-    if(textoLower.includes(
+    /*
+    ==========================
+    CONTINUAR
+    ==========================
+    */
+
+    if(
+
+        textoLower.includes(
         "libravox continuar"
-    )){
+        ) ||
+
+        textoLower.includes(
+        "libra vox continuar"
+        )
+
+    ){
 
         aulaPausada = false;
 
@@ -196,14 +221,30 @@ function processarTexto(texto){
 
     }
 
+    /*
+    ==========================
+    CÂMERA
+    ==========================
+    */
+
     if(
+
         textoLower.includes(
         "libravox câmera"
         ) ||
 
         textoLower.includes(
         "libravox camera"
+        ) ||
+
+        textoLower.includes(
+        "libra vox câmera"
+        ) ||
+
+        textoLower.includes(
+        "libra vox camera"
         )
+
     ){
 
         aulaPausada = true;
@@ -214,9 +255,23 @@ function processarTexto(texto){
 
     }
 
-    if(textoLower.includes(
+    /*
+    ==========================
+    FINALIZAR
+    ==========================
+    */
+
+    if(
+
+        textoLower.includes(
         "libravox fim"
-    )){
+        ) ||
+
+        textoLower.includes(
+        "libra vox fim"
+        )
+
+    ){
 
         finalizarAula();
 
@@ -225,17 +280,17 @@ function processarTexto(texto){
     }
 
     /*
-    ========================
+    ==========================
     NÃO SALVA SE PAUSADO
-    ========================
+    ==========================
     */
 
     if(aulaPausada) return;
 
     /*
-    ========================
+    ==========================
     LIMPEZA TEXTO
-    ========================
+    ==========================
     */
 
     texto = limparTexto(texto);
@@ -258,7 +313,17 @@ function limparTexto(texto){
     );
 
     texto = texto.replace(
+        /libra vox pausar/gi,
+        ""
+    );
+
+    texto = texto.replace(
         /libravox continuar/gi,
+        ""
+    );
+
+    texto = texto.replace(
+        /libra vox continuar/gi,
         ""
     );
 
@@ -273,7 +338,22 @@ function limparTexto(texto){
     );
 
     texto = texto.replace(
+        /libra vox câmera/gi,
+        ""
+    );
+
+    texto = texto.replace(
+        /libra vox camera/gi,
+        ""
+    );
+
+    texto = texto.replace(
         /libravox fim/gi,
+        ""
+    );
+
+    texto = texto.replace(
+        /libra vox fim/gi,
         ""
     );
 
@@ -291,7 +371,9 @@ function atualizarTexto(){
     textoCompleto;
 
     /*
+    ==========================
     TEXTO DO VLIBRAS
+    ==========================
     */
 
     document
@@ -386,11 +468,17 @@ async function abrirCamera(){
         video.srcObject =
         streamCamera;
 
-        document
-        .getElementById(
+        const modal =
+        document.getElementById(
             "cameraModal"
-        )
-        .style.display = "flex";
+        );
+
+        if(modal){
+
+            modal.style.display =
+            "flex";
+
+        }
 
     }catch(erro){
 
@@ -484,11 +572,17 @@ function fecharCamera(){
 
     }
 
-    document
-    .getElementById(
+    const modal =
+    document.getElementById(
         "cameraModal"
-    )
-    .style.display = "none";
+    );
+
+    if(modal){
+
+        modal.style.display =
+        "none";
+
+    }
 
 }
 
