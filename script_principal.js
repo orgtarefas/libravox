@@ -12,6 +12,8 @@ let aulaPausada = false;
 
 let textoCompleto = "";
 
+let streamCamera = null;
+
 const SpeechRecognition =
 window.SpeechRecognition ||
 window.webkitSpeechRecognition;
@@ -32,21 +34,72 @@ if(!SpeechRecognition){
 
 }
 
-const btnIniciar = document.getElementById("btnIniciar");
+const btnIniciar =
+document.getElementById("btnIniciar");
 
-btnIniciar.addEventListener("click", iniciarAula);
+btnIniciar.addEventListener(
+    "click",
+    iniciarAula
+);
 
-function iniciarAula(){
+async function iniciarAula(){
 
     if(aulaAtiva) return;
 
-    aulaAtiva = true;
+    try{
 
-    aulaPausada = false;
+        /*
+        ========================
+        SOLICITA PERMISSÕES
+        ========================
+        */
 
-    atualizarStatus("🎤 Aula iniciada");
+        atualizarStatus(
+            "Solicitando permissões..."
+        );
 
-    reconhecimento.start();
+        streamCamera =
+        await navigator
+        .mediaDevices
+        .getUserMedia({
+
+            video: true,
+            audio: true
+
+        });
+
+        /*
+        FECHA STREAM INICIAL
+        MAS MANTÉM PERMISSÃO
+        */
+
+        streamCamera
+        .getTracks()
+        .forEach(track => track.stop());
+
+        aulaAtiva = true;
+
+        aulaPausada = false;
+
+        atualizarStatus(
+            "🎤 Aula iniciada"
+        );
+
+        reconhecimento.start();
+
+    }catch(erro){
+
+        console.log(erro);
+
+        atualizarStatus(
+            "Permissões negadas."
+        );
+
+        alert(
+            "Você precisa permitir câmera e microfone."
+        );
+
+    }
 
 }
 
@@ -54,17 +107,23 @@ reconhecimento.onresult = function(event){
 
     let textoFinal = "";
 
-    for(let i = event.resultIndex; i < event.results.length; i++){
+    for(let i = event.resultIndex;
+        i < event.results.length;
+        i++){
 
         const transcript =
-        event.results[i][0].transcript.trim();
+        event.results[i][0]
+        .transcript
+        .trim();
 
         const isFinal =
-        event.results[i].isFinal;
+        event.results[i]
+        .isFinal;
 
         if(isFinal){
 
-            textoFinal += transcript + " ";
+            textoFinal +=
+            transcript + " ";
 
         }
 
@@ -80,7 +139,9 @@ reconhecimento.onresult = function(event){
 
 reconhecimento.onerror = function(event){
 
-    atualizarStatus("Erro: " + event.error);
+    atualizarStatus(
+        "Erro: " + event.error
+    );
 
 };
 
@@ -96,9 +157,10 @@ reconhecimento.onend = function(){
 
 function processarTexto(texto){
 
-    const textoLower = texto.toLowerCase().trim();
+    const textoLower =
+    texto.toLowerCase().trim();
 
-    console.log("Reconhecido:", textoLower);
+    console.log(textoLower);
 
     /*
     ========================
@@ -106,32 +168,45 @@ function processarTexto(texto){
     ========================
     */
 
-    if(textoLower.includes("libravox pausar")){
+    if(textoLower.includes(
+        "libravox pausar"
+    )){
 
         aulaPausada = true;
 
-        atualizarStatus("⏸ Aula pausada");
+        atualizarStatus(
+            "⏸ Aula pausada"
+        );
 
         return;
 
     }
 
-    if(textoLower.includes("libravox continuar")){
+    if(textoLower.includes(
+        "libravox continuar"
+    )){
 
         aulaPausada = false;
 
-        atualizarStatus("▶ Aula continuada");
+        atualizarStatus(
+            "▶ Aula continuada"
+        );
 
         return;
 
     }
 
-    if(textoLower.includes("libravox câmera") ||
-       textoLower.includes("libravox camera")){
+    if(
+        textoLower.includes(
+        "libravox câmera"
+        ) ||
+
+        textoLower.includes(
+        "libravox camera"
+        )
+    ){
 
         aulaPausada = true;
-
-        atualizarStatus("📷 Abrindo câmera");
 
         abrirCamera();
 
@@ -139,7 +214,9 @@ function processarTexto(texto){
 
     }
 
-    if(textoLower.includes("libravox fim")){
+    if(textoLower.includes(
+        "libravox fim"
+    )){
 
         finalizarAula();
 
@@ -149,8 +226,7 @@ function processarTexto(texto){
 
     /*
     ========================
-    SE ESTIVER PAUSADO
-    NÃO SALVA TEXTO
+    NÃO SALVA SE PAUSADO
     ========================
     */
 
@@ -158,19 +234,13 @@ function processarTexto(texto){
 
     /*
     ========================
-    LIMPEZA DE TEXTO
+    LIMPEZA TEXTO
     ========================
     */
 
     texto = limparTexto(texto);
 
     if(texto === "") return;
-
-    /*
-    ========================
-    SALVA TEXTO
-    ========================
-    */
 
     textoCompleto += texto + "\n";
 
@@ -182,53 +252,62 @@ function processarTexto(texto){
 
 function limparTexto(texto){
 
-    texto = texto.replace(/libravox pausar/gi, "");
-    texto = texto.replace(/libravox continuar/gi, "");
-    texto = texto.replace(/libravox câmera/gi, "");
-    texto = texto.replace(/libravox camera/gi, "");
-    texto = texto.replace(/libravox fim/gi, "");
+    texto = texto.replace(
+        /libravox pausar/gi,
+        ""
+    );
 
-    texto = texto.trim();
+    texto = texto.replace(
+        /libravox continuar/gi,
+        ""
+    );
 
-    return texto;
+    texto = texto.replace(
+        /libravox câmera/gi,
+        ""
+    );
+
+    texto = texto.replace(
+        /libravox camera/gi,
+        ""
+    );
+
+    texto = texto.replace(
+        /libravox fim/gi,
+        ""
+    );
+
+    return texto.trim();
 
 }
 
 function atualizarTexto(){
 
-    document.getElementById("textoReconhecido").innerText =
+    document
+    .getElementById(
+        "textoReconhecido"
+    )
+    .innerText =
     textoCompleto;
 
     /*
-    ========================
-    TEXTO PARA O VLIBRAS
-    ========================
+    TEXTO DO VLIBRAS
     */
 
-    document.getElementById("textoVlibras").innerText =
+    document
+    .getElementById(
+        "textoVlibras"
+    )
+    .innerText =
     textoCompleto;
 
 }
 
 function atualizarStatus(msg){
 
-    document.getElementById("status").innerHTML = msg;
-
-}
-
-function finalizarAula(){
-
-    aulaAtiva = false;
-
-    aulaPausada = true;
-
-    reconhecimento.stop();
-
-    atualizarStatus("✅ Aula finalizada");
-
-    salvarAula();
-
-    alert("Aula finalizada.");
+    document
+    .getElementById("status")
+    .innerHTML = msg;
 
 }
 
@@ -245,80 +324,185 @@ function limparAula(){
 
     textoCompleto = "";
 
-    localStorage.removeItem("aulaTexto");
+    localStorage.removeItem(
+        "aulaTexto"
+    );
 
     atualizarTexto();
 
-    atualizarStatus("🧹 Aula limpa");
+    atualizarStatus(
+        "🧹 Aula limpa"
+    );
 
 }
 
-function abrirCamera(){
+function finalizarAula(){
 
-    document
-    .getElementById("cameraInput")
-    .click();
+    aulaAtiva = false;
+
+    aulaPausada = true;
+
+    reconhecimento.stop();
+
+    fecharCamera();
+
+    atualizarStatus(
+        "✅ Aula finalizada"
+    );
+
+    salvarAula();
 
 }
 
-document
-.getElementById("cameraInput")
-.addEventListener("change", function(event){
+/*
+==================================
+CÂMERA
+==================================
+*/
 
-    const arquivo = event.target.files[0];
+async function abrirCamera(){
 
-    if(!arquivo){
+    try{
 
-        aulaPausada = false;
+        atualizarStatus(
+            "📷 Abrindo câmera"
+        );
 
-        return;
+        streamCamera =
+        await navigator
+        .mediaDevices
+        .getUserMedia({
+
+            video: true,
+            audio: false
+
+        });
+
+        const video =
+        document.getElementById(
+            "videoCamera"
+        );
+
+        video.srcObject =
+        streamCamera;
+
+        document
+        .getElementById(
+            "cameraModal"
+        )
+        .style.display = "flex";
+
+    }catch(erro){
+
+        console.log(erro);
+
+        atualizarStatus(
+            "Erro ao abrir câmera"
+        );
 
     }
 
-    const reader = new FileReader();
+}
 
-    reader.onload = function(e){
+function capturarFoto(){
 
-        const div = document.createElement("div");
+    const video =
+    document.getElementById(
+        "videoCamera"
+    );
 
-        div.className = "col-md-4";
+    const canvas =
+    document.createElement(
+        "canvas"
+    );
 
-        const img = document.createElement("img");
+    canvas.width =
+    video.videoWidth;
 
-        img.src = e.target.result;
+    canvas.height =
+    video.videoHeight;
 
-        img.className = "img-aula";
+    const ctx =
+    canvas.getContext("2d");
 
-        div.appendChild(img);
+    ctx.drawImage(
+        video,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
 
-        document
-        .getElementById("galeria")
-        .appendChild(div);
+    const imagem =
+    canvas.toDataURL(
+        "image/png"
+    );
 
-        atualizarStatus("📸 Imagem anexada");
+    const div =
+    document.createElement("div");
 
-        /*
-        CONTINUA AUTOMATICAMENTE
-        */
+    div.className =
+    "col-md-4";
 
-        aulaPausada = false;
+    const img =
+    document.createElement("img");
 
-        atualizarStatus("▶ Aula continuada");
+    img.src = imagem;
 
-    };
+    img.className =
+    "img-aula";
 
-    reader.readAsDataURL(arquivo);
+    div.appendChild(img);
 
-});
+    document
+    .getElementById(
+        "galeria"
+    )
+    .appendChild(div);
+
+    fecharCamera();
+
+    atualizarStatus(
+        "📸 Imagem anexada"
+    );
+
+    aulaPausada = false;
+
+    atualizarStatus(
+        "▶ Aula continuada"
+    );
+
+}
+
+function fecharCamera(){
+
+    if(streamCamera){
+
+        streamCamera
+        .getTracks()
+        .forEach(track => track.stop());
+
+    }
+
+    document
+    .getElementById(
+        "cameraModal"
+    )
+    .style.display = "none";
+
+}
 
 window.onload = function(){
 
     const aulaSalva =
-    localStorage.getItem("aulaTexto");
+    localStorage.getItem(
+        "aulaTexto"
+    );
 
     if(aulaSalva){
 
-        textoCompleto = aulaSalva;
+        textoCompleto =
+        aulaSalva;
 
         atualizarTexto();
 
