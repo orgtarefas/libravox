@@ -1,0 +1,75 @@
+body{
+
+    background: #f4f6f9;
+    font-family: Arial, Helvetica, sans-serif;
+
+}
+
+.login-card{
+
+    width: 400px;
+    border-radius: 20px;
+
+}
+
+.logo{
+
+    width: 140px;
+
+}
+
+.status-box{
+
+    background: #222;
+    color: #00ff88;
+    padding: 15px;
+    border-radius: 10px;
+    min-height: 60px;
+    font-weight: bold;
+
+}
+
+.texto-box{
+
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 15px;
+    min-height: 250px;
+    white-space: pre-wrap;
+    overflow-y: auto;
+
+}
+
+.texto-vlibras{
+
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 15px;
+    min-height: 300px;
+    white-space: pre-wrap;
+
+}
+
+.img-aula{
+
+    width: 100%;
+    border-radius: 15px;
+    margin-top: 15px;
+    object-fit: cover;
+
+}
+
+.card{
+
+    border: none;
+    border-radius: 20px;
+
+}
+
+.botao-controle{
+
+    min-width: 180px;
+
+}
